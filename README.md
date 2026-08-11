@@ -1,6 +1,5 @@
-# tesis-mbmm-betros
-Tesis – Genética Forense y Poblacional
-Análisis de linajes paternos, ancestría genómica y poblaciones comparativas
+# Tesis Maestría en Biología Molecular Médica - Universidad de Buenos Aires
+Titulo: Análisis de la diversidad de polimorfismos SNPs y STRs del cromosoma Y en una población del área metropolitana de Buenos Aires y su correlación con marcadores de herencia biparental.
 Autor: Facundo Betros
 Repositorio: Análisis completo reproducible en R
 
@@ -37,6 +36,7 @@ Todo el análisis está implementado en R, con scripts modulares y exportación 
 │
 └── README.md
 
+
 🚀 Cómo ejecutar el análisis completo
 1. Clonar el repositorio:
 git clone https://github.com/<tu_usuario>/<tu_repo>.git
@@ -44,6 +44,7 @@ git clone https://github.com/<tu_usuario>/<tu_repo>.git
 3. Instalar dependencias (se hace automáticamente desde los scripts)
 4. Ejecutar: source("scripts/main.R")
 Esto generará todas las figuras y tablas dentro de outputs/
+
 
 📊 Resultados generados
 Objetivo 1
