@@ -2,6 +2,7 @@
 # MAIN - EJECUCIÓN COMPLETA DE LA TESIS
 # Autor: Facundo Betros
 # ==============================================================================
+set.seed(123) # Para reproducibilidad
 
 message(">> Iniciando pipeline completo de la tesis...")
 

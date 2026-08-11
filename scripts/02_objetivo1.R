@@ -1,9 +1,13 @@
 # ==============================================================================
-# 02 - OBJETIVO 1: PARÁMETROS FORENSES, HAPLOTIPOS Y MICROVARIANTES
+# 02 - OBJETIVO 1: Identificar y caracterizar los haplotipos del cromosoma Y presentes en la muestra poblacional del Área Metropolitana de Buenos Aires.
 # Autor: Facundo Betros
 # ==============================================================================
 
 message(">> Ejecutando Objetivo 1...")
+
+# Crear directorios de salida si no existen (evita errores al clonar de GitHub)
+dir.create(here::here("outputs", "tablas"), recursive = TRUE, showWarnings = FALSE)
+dir.create(here::here("outputs", "figuras"), recursive = TRUE, showWarnings = FALSE)
 
 # ------------------------------------------------------------------------------
 # 1. PRE-PROCESAMIENTO DE MUESTRAS

@@ -1,5 +1,5 @@
 # ==============================================================================
-# 05 - OBJETIVO 4: ANCESTRÍA GENÓMICA INTEGRAL
+# 05 - OBJETIVO 4: Evaluar la asociación entre los haplogrupos del cromosoma Y y los componentes de ancestría estimados mediante marcadores de herencia biparental, interpretando dichos patrones en el contexto de los procesos migratorios y demográficos del Área Metropolitana de Buenos Aires.
 # Autor: Facundo Betros
 # ==============================================================================
 
@@ -34,33 +34,9 @@ ancestria_sistemas_hg <- ancestria_sistemas %>%
 
 message("   - Calculando ancestría promedio por sistema...")
 
-ancestria_promedio <- tibble(
-  Sistema = c("STR", "STR", "STR",
-              "InDel", "InDel", "InDel",
-              "AIMs", "AIMs", "AIMs",
-              "Cromosoma X", "Cromosoma X", "Cromosoma X"),
-  Componente = c("Africano", "Europeo", "Nativo",
-                 "Africano", "Europeo", "Nativo",
-                 "Africano", "Europeo", "Nativo",
-                 "Africano", "Europeo", "Nativo"),
-  Valor = c(
-    mean(ancestria_sistemas_hg$str_af, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$str_eu, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$str_na, na.rm = TRUE),
-    
-    mean(ancestria_sistemas_hg$ind_af, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$ind_eu, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$ind_na, na.rm = TRUE),
-    
-    mean(ancestria_sistemas_hg$aims_af, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$aims_eu, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$aims_na, na.rm = TRUE),
-    
-    mean(ancestria_sistemas_hg$cx_af, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$cx_eu, na.rm = TRUE),
-    mean(ancestria_sistemas_hg$cx_nativo, na.rm = TRUE)
-  )
-)
+ancestria_promedio <- ancestria_promedio %>%
+  mutate(Sistema = factor(Sistema, levels = c("STR", "InDel", "AIMs", "Cromosoma X")))
+
 
 p_ancestria <- ggplot(ancestria_promedio, aes(x = Sistema, y = Valor, fill = Componente)) +
   geom_col(color = "black", linewidth = 0.3) +
@@ -88,10 +64,12 @@ grafico_structure <- function(datos, af, eu, na, titulo, archivo){
     pivot_longer(cols = c(af, eu, na),
                  names_to = "componente",
                  values_to = "valor") %>%
-    mutate(componente = recode(componente,
-                               !!af := "Africano",
-                               !!eu := "Europeo",
-                               !!na := "Nativo"))
+    mutate(componente = case_when(
+      componente == af ~ "Africano",
+      componente == eu ~ "Europeo",
+      componente == na ~ "Nativo",
+      TRUE ~ componente
+    ))
   
   orden <- datos %>% arrange(.data[[na]]) %>% pull(sample_id)
   datos_long <- datos_long %>% mutate(sample_id = factor(sample_id, levels = unique(orden)))
@@ -204,5 +182,68 @@ ggsave(
   here::here("outputs", "figuras", "Obj4_Interaccion_Y_mtDNA.png"),
   p_mt_y, width = 18, height = 12, units = "cm", dpi = 300
 )
+
+# ------------------------------------------------------------------------------
+# 5. ASOCIACIÓN ESTADÍSTICA: HAPLOGRUPOS Y vs. ANCESTRÍA GENÓMICA
+# ------------------------------------------------------------------------------
+
+message("   - Calculando pruebas estadísticas (Kruskal-Wallis, Spearman y Dunn)...")
+
+# 5.1 Kruskal-Wallis
+datos_kw <- ancestria_sistemas_hg %>%
+  filter(!is.na(cat_y), !is.na(str_na))
+
+kruskal_resultado <- kruskal.test(str_na ~ cat_y, data = datos_kw)
+
+# 5.2 Correlación de Spearman
+datos_corr <- ancestria_sistemas_hg %>%
+  mutate(origen_paterno_num = if_else(cat_y == "Q", 1, 0)) %>%
+  filter(!is.na(origen_paterno_num), !is.na(str_na))
+
+cor_autosomica <- cor.test(datos_corr$origen_paterno_num, datos_corr$str_na, method = "spearman")
+
+cor_cx <- NULL
+if("cx_nativo" %in% names(datos_corr)) {
+  datos_cx <- datos_corr %>% filter(!is.na(cx_nativo))
+  cor_cx <- cor.test(datos_cx$origen_paterno_num, datos_cx$cx_nativo, method = "spearman")
+}
+
+# 5.3 Exportar resumen de Kruskal y Spearman
+tabla_resultados <- tibble::tibble(
+  Analisis = c(
+    "Kruskal-Wallis: ancestria autosomica ~ haplogrupo Y",
+    "Spearman: origen paterno vs ancestria autosomica",
+    "Spearman: origen paterno vs ancestria cromosoma X"
+  ),
+  Estadistico = c(
+    round(as.numeric(kruskal_resultado$statistic), 3),
+    round(as.numeric(cor_autosomica$estimate), 3),
+    if(!is.null(cor_cx)) round(as.numeric(cor_cx$estimate), 3) else NA
+  ),
+  p_valor = c(
+    kruskal_resultado$p.value,
+    cor_autosomica$p.value,
+    if(!is.null(cor_cx)) cor_cx$p.value else NA
+  )
+)
+
+write.csv(
+  tabla_resultados,
+  here::here("outputs", "tablas", "Obj4_Resultados_Estadisticos.csv"),
+  row.names = FALSE
+)
+
+# 5.4 Post-hoc de Dunn (requiere paquete FSA)
+if (requireNamespace("FSA", quietly = TRUE)) {
+  dunn_resultado <- FSA::dunnTest(str_na ~ cat_y, data = datos_kw, method = "bh")
+  
+  write.csv(
+    dunn_resultado$res,
+    here::here("outputs", "tablas", "Obj4_Dunn_PostHoc_HaplogruposY.csv"),
+    row.names = FALSE
+  )
+} else {
+  warning("El paquete 'FSA' no esta instalado. No se pudo ejecutar el Post-Hoc de Dunn.")
+}
 
 message(">> Objetivo 4 completado.")

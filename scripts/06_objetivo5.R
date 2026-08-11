@@ -174,4 +174,68 @@ ggsave(
   p_parallel, width = 25, height = 18, units = "cm", dpi = 300
 )
 
+# ------------------------------------------------------------------------------
+# 7. ANÁLISIS ESTADÍSTICO DEL DELTA (Diferencia de Cero e Influencia Paterna)
+# ------------------------------------------------------------------------------
+message("   - Calculando estadísticos para el Delta de retención nativa...")
+
+# Wilcoxon Delta vs 0
+wilcox_delta <- wilcox.test(datos_mestizaje$delta_nativo, mu = 0, exact = FALSE)
+capture.output(wilcox_delta, file = here::here("outputs", "tablas", "Obj5_Wilcoxon_Delta_vs_0.txt"))
+
+# Wilcoxon Delta ~ Origen Paterno
+if(length(unique(datos_mestizaje$origen_y)) > 1){
+  wilcox_delta_y <- wilcox.test(delta_nativo ~ origen_y, data = datos_mestizaje, exact = FALSE)
+  capture.output(wilcox_delta_y, file = here::here("outputs", "tablas", "Obj5_Wilcoxon_Delta_OrigenY.txt"))
+} else {
+  wilcox_delta_y <- NULL
+}
+
+# Tabla Resumen Objetivo 5
+tabla_obj5 <- tibble::tibble(
+  Analisis = c("Spearman AU_Nativo vs CX_Nativo", 
+               "Wilcoxon pareado AU_Nativo vs CX_Nativo",
+               "Wilcoxon Delta (CX-AU) vs 0", 
+               "Wilcoxon Delta según origen paterno"),
+  Estadistico = c(round(as.numeric(cor_au_cx$estimate), 3), 
+                  round(as.numeric(wilcox_au_cx$statistic), 3),
+                  round(as.numeric(wilcox_delta$statistic), 3),
+                  ifelse(is.null(wilcox_delta_y), NA, round(as.numeric(wilcox_delta_y$statistic), 3))),
+  p_valor = c(cor_au_cx$p.value, 
+              wilcox_au_cx$p.value, 
+              wilcox_delta$p.value,
+              ifelse(is.null(wilcox_delta_y), NA, wilcox_delta_y$p.value))
+)
+
+write.csv(tabla_obj5, here::here("outputs", "tablas", "Obj5_Resumen_Estadistico.csv"), row.names = FALSE)
+
+# ------------------------------------------------------------------------------
+# 8. GRÁFICOS COMPLEMENTARIOS: CORRELACIÓN Y BOXPLOT
+# ------------------------------------------------------------------------------
+message("   - Generando scatter plot de correlación y boxplot de deltas...")
+
+# Gráfico de Correlación
+graf_cor <- ggplot(datos_mestizaje, aes(x = au_nativo, y = cx_nativo)) +
+  geom_point(size = 3, alpha = 0.8, colour = "#377eb8") +
+  geom_smooth(method = "lm", se = FALSE, colour = "#e41a1c", linewidth = 1) +
+  labs(title = "Relación entre ancestría nativa autosómica y de cromosoma X",
+       x = "Ancestría nativa autosómica", y = "Ancestría nativa cromosoma X") +
+  theme_minimal(base_size = 12)
+
+ggsave(here::here("outputs", "figuras", "Obj5_Figura_Correlacion_AU_CX.png"), 
+       graf_cor, width = 18, height = 12, units = "cm", dpi = 300)
+
+# Gráfico Boxplot del Delta
+graf_delta <- ggplot(datos_mestizaje, aes(x = origen_y, y = delta_nativo, fill = origen_y)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  scale_fill_manual(values = c("NATIVO" = "#e41a1c", "NO_NATIVO" = "#377eb8")) +
+  labs(title = "Exceso de ancestría nativa retenida en cromosoma X",
+       x = "Origen del cromosoma Y", y = "Δ Nativo (CX - AU)") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "none", plot.title = element_text(face = "bold", hjust = 0.5))
+
+ggsave(here::here("outputs", "figuras", "Obj5_Figura_Delta_OrigenY.png"), 
+       graf_delta, width = 16, height = 12, units = "cm", dpi = 300)
+
 message(">> Objetivo 5 completado.")

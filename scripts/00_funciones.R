@@ -3,6 +3,34 @@
 # Autor: Facundo Betros
 # ==============================================================================
 
+# --- Librerías ----------------------------------------------------------------
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman")
+}
+
+pacman::p_load(
+  tidyverse,
+  readxl,
+  janitor,
+  stringi,
+  maps,
+  mapdata,
+  countrycode,
+  ggtern,
+  grid,
+  gridExtra,
+  irr,
+  dplyr,
+  stringr,
+  tibble,
+  FSA,
+  ape,
+  ggtree,
+  dendextend,
+  factoextra,
+  ggplot2
+)
+
 # --- Limpieza de texto ---------------------------------------------------------
 clean_text <- function(x) {
   x %>%
@@ -47,4 +75,34 @@ paleta_continentes <- c(
   "Asia"     = "#4daf4a",
   "Europe"   = "#377eb8",
   "Oceania"  = "#984ea3"
+)
+
+paleta_hg <- c(
+  "R" = "#377eb8", "Q" = "#e41a1c", "E1B1B" = "#31a354", "E1B1A" = "#ff7f00",
+  "E1A" = "#a1d99b", "J" = "#756bb1", "I" = "#fd8d3c", "G" = "#bf812d",
+  "L" = "#00bfc4", "T" = "#f781bf", "O" = "#984ea3", "A" = "#8c510a",
+  "B" = "#b35806", "ND" = "grey50", "NO" = "grey75", "H" = "#ff1493"
+)
+
+paleta_haplotipos <- c(
+  "Únicos" = "#1f6285",
+  "2 Repeticiones" = "#e8752f",
+  "3 Repeticiones" = "#1f7a2e",
+  "4 Repeticiones" = "#2ea8df"
+)
+
+paleta_grupos <- c(
+  "Europeo" = "#377eb8",
+  "Mediterraneo" = "#756bb1",
+  "Nativo Americano" = "#e41a1c",
+  "Africano" = "#31a354",
+  "Asiatico" = "#ff7f00",
+  "Otros" = "grey70"
+)
+
+paleta_mt <- c(
+  "A2"="#e41a1c",
+  "B2"="#f781bf",
+  "C1"="#a65628",
+  "D1"="#984ea3"
 )

@@ -1,5 +1,5 @@
 # ==============================================================================
-# 03 - OBJETIVO 2: FRECUENCIA DE HAPLOGRUPOS Y DIVERSIDAD
+# 03 - OBJETIVO 2: Predecir y caracterizar los haplogrupos del cromosoma Y a partir de los haplotipos obtenidos en la población analizada.
 # Autor: Facundo Betros
 # ==============================================================================
 
@@ -21,7 +21,7 @@ p_hg <- ggplot(frecuencias_subhg, aes(x = reorder(hg_y, n), y = n, fill = cat_y)
   geom_text(aes(label = paste0(n, " (", frecuencia, "%)")),
             hjust = -0.1, size = 3.7, fontface = "bold") +
   coord_flip() +
-  scale_fill_manual(values = paleta_ancestria) +
+  scale_fill_manual(values = paleta_hg) +
   labs(title = "Frecuencia de Subhaplogrupos del Cromosoma Y",
        x = "Subhaplogrupo", y = "Frecuencia") +
   expand_limits(y = max(frecuencias_subhg$n) * 1.25) +

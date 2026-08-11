@@ -1,5 +1,5 @@
 # ==============================================================================
-# 04 - OBJETIVO 3: POBLACIONES COMPARATIVAS
+# 04 - OBJETIVO 3: Evaluar la frecuencia de los haplotipos y haplogrupos dentro de la población metropolitana de Buenos Aires y comparar su distribución con la observada en otras regiones de Argentina, poblaciones de Sudamérica y bases de datos internacionales.
 # Autor: Facundo Betros
 # ==============================================================================
 
@@ -37,6 +37,9 @@ ggsave(
   p_ternario, width = 18, height = 16, units = "cm", dpi = 300
 )
 
+# Desvinculamos ggtern para que no arruine los gráficos cartesianos siguientes
+if("package:ggtern" %in% search()) detach("package:ggtern", unload=TRUE)
+
 # ------------------------------------------------------------------------------
 # 2. MA-PLOT (Argentina vs Mundo usando YHRD)
 # ------------------------------------------------------------------------------
@@ -46,6 +49,8 @@ message("   - Generando MA-Plot...")
 yhrd_plot <- yhrd %>%
   left_join(muestras %>% select(id, cat_y), by = "id") %>%
   mutate(
+    frec_mun = clean_numeric(frec_mun), # <-- Aseguramos que sean números
+    frec_arg = clean_numeric(frec_arg), # <-- Aseguramos que sean números
     origen_linaje = case_when(
       cat_y == "Q" ~ "Q",
       cat_y %in% c("R", "E1B1B") ~ "R_E1B1B",
