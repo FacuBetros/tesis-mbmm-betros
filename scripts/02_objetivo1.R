@@ -1,0 +1,259 @@
+# ==============================================================================
+# 02 - OBJETIVO 1: PARÁMETROS FORENSES, HAPLOTIPOS Y MICROVARIANTES
+# Autor: Facundo Betros
+# ==============================================================================
+
+message(">> Ejecutando Objetivo 1...")
+
+# ------------------------------------------------------------------------------
+# 1. PRE-PROCESAMIENTO DE MUESTRAS
+# ------------------------------------------------------------------------------
+
+# Limpieza de texto y creación de variables auxiliares
+muestras <- muestras %>%
+  mutate(
+    id          = clean_text(id),
+    hg_y        = clean_text(hg_y),
+    cat_y       = clean_text(cat_y),
+    mt_dna      = clean_text(mt_dna),
+    shg_nevgen  = clean_text(shg_nevgen),
+    shg_hprg    = clean_text(shg_hprg),
+    mt_dna_nat  = mtdna_native(mt_dna),
+    origen_y    = y_origin(cat_y),
+    grupo_y     = case_when(
+      cat_y == "Q" ~ "NATIVO",
+      cat_y %in% c("R", "I", "G") ~ "EUROPEO",
+      cat_y %in% c("J", "E1B1B", "T") ~ "MEDITERRANEO",
+      cat_y %in% c("A", "B", "E1A", "E1B1A") ~ "AFRICANO",
+      cat_y %in% c("L", "O", "H") ~ "ASIATICO",
+      TRUE ~ "OTROS"
+    )
+  )
+
+# Lista de loci Y-STR
+loci_y <- c(
+  "dys576","dys389i","dys448","dys389ii","dys19","dys391","dys481","dys549",
+  "dys533","dys438","dys437","dys570","dys635","dys390","dys439","dys392",
+  "dys643","dys393","dys458","dys385a","dys385b","dys456","gatah4"
+)
+
+# Unir haplotipo completo
+muestras <- muestras %>% unite(haplotipo, all_of(loci_y), sep = "-", remove = FALSE)
+
+# ------------------------------------------------------------------------------
+# 2. PARÁMETROS FORENSES POR KIT
+# ------------------------------------------------------------------------------
+
+message("   - Calculando parámetros forenses...")
+
+# Definición de kits
+marcadores_y12 <- c("dys19","dys389i","dys389ii","dys390","dys391","dys392","dys393",
+                    "dys385a","dys385b","dys438","dys437","dys439")
+
+marcadores_y17 <- c(marcadores_y12, "dys448","dys635","dys458","dys456","gatah4")
+
+marcadores_y23 <- c(marcadores_y17, "dys576","dys481","dys549","dys533","dys570","dys643")
+
+# Clasificación por cantidad de loci válidos
+muestras <- muestras %>%
+  rowwise() %>%
+  mutate(n_validos = sum(!(is.na(c_across(all_of(loci_y))) |
+                             c_across(all_of(loci_y)) %in% c("NA","")))) %>%
+  ungroup() %>%
+  mutate(
+    Kit_Origen = case_when(
+      n_validos == 0 ~ "Sin Datos",
+      n_validos <= 12 ~ "PowerPlex Y12",
+      n_validos <= 17 ~ "Yfiler 17",
+      n_validos > 17 ~ "PowerPlex Y23"
+    )
+  )
+
+# Función para calcular parámetros forenses
+calcular_forenses <- function(df, marcadores, nombre_kit) {
+  df %>%
+    filter(Kit_Origen == nombre_kit) %>%
+    unite("haplotipo_kit", all_of(marcadores), sep = "-", remove = FALSE) %>%
+    count(haplotipo_kit, name = "Conteo") %>%
+    mutate(
+      N_total = sum(Conteo),
+      Frecuencia = Conteo / N_total,
+      Frec_Cuadrado = Frecuencia^2
+    ) %>%
+    summarise(
+      Kit = nombre_kit,
+      N_Analizado = max(N_total),
+      Ht_Distintos = n(),
+      Ht_Unicos = sum(Conteo == 1),
+      DC = Ht_Distintos / N_Analizado,
+      MP = sum(Frec_Cuadrado),
+      PD = 1 - MP,
+      HD = (N_Analizado / (N_Analizado - 1)) * (1 - sum(Frec_Cuadrado))
+    )
+}
+
+tabla_parametros_forenses <- bind_rows(
+  calcular_forenses(muestras, marcadores_y12, "PowerPlex Y12"),
+  calcular_forenses(muestras, marcadores_y17, "Yfiler 17"),
+  calcular_forenses(muestras, marcadores_y23, "PowerPlex Y23")
+)
+
+write.csv(tabla_parametros_forenses,
+          here::here("outputs", "tablas", "Obj1_Parametros_Forenses.csv"),
+          row.names = FALSE)
+
+# ------------------------------------------------------------------------------
+# 3. HAPLOTIPOS ÚNICOS Y REPETIDOS
+# ------------------------------------------------------------------------------
+
+message("   - Analizando haplotipos únicos y repetidos...")
+
+haplotipos_plot <- muestras %>%
+  count(haplotipo, name = "repeticiones") %>%
+  mutate(
+    categoria = case_when(
+      repeticiones == 1 ~ "Únicos",
+      repeticiones == 2 ~ "2 Repeticiones",
+      repeticiones == 3 ~ "3 Repeticiones",
+      repeticiones >= 4 ~ "4+ Repeticiones"
+    ),
+    grupo = if_else(categoria == "Únicos", "Únicos", "Repetidos")
+  ) %>%
+  count(grupo, categoria, name = "n") %>%
+  group_by(grupo) %>%
+  mutate(porcentaje = n / sum(n)) %>%
+  ungroup()
+
+paleta_haplotipos <- c(
+  "Únicos" = "#1f6285",
+  "2 Repeticiones" = "#e8752f",
+  "3 Repeticiones" = "#1f7a2e",
+  "4+ Repeticiones" = "#2ea8df"
+)
+
+p_haplotipos <- ggplot(haplotipos_plot, aes(x = grupo, y = porcentaje, fill = categoria)) +
+  geom_col(width = 0.5, color = "black") +
+  geom_text(aes(label = n), position = position_stack(vjust = 0.5),
+            color = "white", fontface = "bold", size = 3.5) +
+  scale_fill_manual(values = paleta_haplotipos) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(title = "Distribución de Haplotipos", x = NULL, y = "Porcentaje") +
+  theme_bw(base_size = 14)
+
+ggsave(
+  here::here("outputs", "figuras", "Obj1_Haplotipos_Unicos_Repetidos.png"),
+  p_haplotipos, width = 16, height = 12, units = "cm", dpi = 300
+)
+
+# ------------------------------------------------------------------------------
+# 4. MICROVARIANTES
+# ------------------------------------------------------------------------------
+
+message("   - Procesando microvariantes...")
+
+microvariantes_muestras <- muestras %>%
+  select(id, all_of(loci_y)) %>%
+  pivot_longer(cols = all_of(loci_y), names_to = "locus", values_to = "alelo") %>%
+  filter(str_detect(alelo, "\\."))
+
+microvariantes_resumen <- microvariantes_muestras %>%
+  count(locus, alelo, sort = TRUE) %>%
+  mutate(frecuencia = round(100 * n / sum(n), 2))
+
+write.csv(
+  microvariantes_resumen,
+  here::here("outputs", "tablas", "Obj1_Microvariantes_Resumen.csv"),
+  row.names = FALSE
+)
+
+# ------------------------------------------------------------------------------
+# 5. BUBBLE CHART DE MICROVARIANTES
+# ------------------------------------------------------------------------------
+
+message("   - Generando Bubble Chart...")
+
+microvariantes_plot <- microvariantes %>%
+  mutate(
+    country = factor(country, levels = sort(unique(country))),
+    microvariant = factor(microvariant, levels = sort(unique(microvariant)))
+  )
+
+p_bubble <- ggplot(microvariantes_plot, aes(x = country, y = microvariant)) +
+  geom_point(aes(color = continent), size = 4, alpha = 0.9) +
+  geom_text(aes(label = cases), color = "white", size = 2.5, fontface = "bold") +
+  scale_color_manual(values = paleta_continentes) +
+  labs(title = "Distribución Mundial de Microvariantes Y-STR",
+       x = "País", y = "Microvariante") +
+  theme_bw(base_size = 12)
+
+ggsave(
+  here::here("outputs", "figuras", "Obj1_BubbleChart.png"),
+  p_bubble, width = 30, height = 12, units = "cm", dpi = 300
+)
+
+# ------------------------------------------------------------------------------
+# 6. MAPA FILOGEOGRÁFICO
+# ------------------------------------------------------------------------------
+
+message("   - Generando mapa filogeográfico...")
+
+world_map <- map_data("world")
+
+microvariantes_mapa <- microvariantes %>%
+  mutate(region_map = countrycode(country, origin = "country.name", destination = "country.name"))
+
+p_mapa <- ggplot() +
+  geom_polygon(data = world_map,
+               aes(x = long, y = lat, group = group),
+               fill = "grey92", color = "white", linewidth = 0.1) +
+  geom_map(data = microvariantes_mapa, map = world_map,
+           aes(fill = cases, map_id = region_map),
+           color = "white", linewidth = 0.1) +
+  scale_fill_gradient(low = "#fde0dd", high = "#cb181d", name = "Casos") +
+  facet_wrap(~ microvariant, ncol = 3) +
+  labs(title = "Distribución Filogeográfica de Microvariantes Y-STR") +
+  theme_void()
+
+ggsave(
+  here::here("outputs", "figuras", "Obj1_Mapa_Filogeografico.png"),
+  p_mapa, width = 28, height = 18, units = "cm", dpi = 300
+)
+
+# ------------------------------------------------------------------------------
+# 7. CONCORDANCIA ENTRE PREDICTORES
+# ------------------------------------------------------------------------------
+
+message("   - Calculando concordancia NevGen vs Whit Athey...")
+
+datos_concordancia_loci <- muestras %>%
+  mutate(
+    Tipo_Resolucion = case_when(
+      Kit_Origen == "PowerPlex Y12" ~ "Perfiles de 12 loci",
+      Kit_Origen == "Yfiler 17"     ~ "Perfiles de 17 loci",
+      Kit_Origen == "PowerPlex Y23" ~ "Perfiles de 23 loci",
+      TRUE                          ~ "Otros"
+    ),
+    Coincide = if_else(shg_nevgen == shg_hprg, "Concordante", "Discrepante")
+  ) %>%
+  filter(
+    !is.na(shg_nevgen), !is.na(shg_hprg),
+    shg_nevgen != "ND", shg_hprg != "ND",
+    shg_nevgen != "NA", shg_hprg != "NA"
+  )
+
+tabla_concordancia_resolucion <- datos_concordancia_loci %>%
+  count(Tipo_Resolucion, Coincide) %>%
+  group_by(Tipo_Resolucion) %>%
+  mutate(
+    Total_Grupo = sum(n),
+    Porcentaje = round(100 * n / Total_Grupo, 2)
+  ) %>%
+  ungroup()
+
+write.csv(
+  tabla_concordancia_resolucion,
+  here::here("outputs", "tablas", "Obj1_Concordancia_Predictores.csv"),
+  row.names = FALSE
+)
+
+message(">> Objetivo 1 completado.")
