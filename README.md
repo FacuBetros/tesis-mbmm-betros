@@ -27,27 +27,47 @@ Este repositorio contiene el análisis completo de mi tesis de grado sobre gené
 
 • Trayectorias genómicas individuales
 
+---
 
 📁 Estructura del repositorio
+
 ├── datos/
+
 │   └── Tesis.xlsx
+
+
 │
 ├── scripts/
+
 │   ├── 00_funciones.R
+
 │   ├── 01_carga_datos.R
+
 │   ├── 02_objetivo1.R
+
 │   ├── 03_objetivo2.R
+
 │   ├── 04_objetivo3.R
+
 │   ├── 05_objetivo4.R
+
 │   ├── 06_objetivo5.R
+
 │   └── main.R
+
+
 │
 ├── outputs/
+
 │   ├── figuras/
+
 │   └── tablas/
+
 │
+
 └── README.md
 
+---
 
 🚀 Cómo ejecutar el análisis completo
 
@@ -61,6 +81,7 @@ Este repositorio contiene el análisis completo de mi tesis de grado sobre gené
 
 Esto generará todas las figuras y tablas dentro de outputs/
 
+---
 
 📊 Resultados generados
 
@@ -79,6 +100,7 @@ Objetivo 1
 • Concordancia NevGen vs Whit Athey
 
 
+
 Objetivo 2
 
 • Frecuencia de haplogrupos
@@ -92,6 +114,7 @@ Objetivo 2
 • Índice Kappa
 
 
+
 Objetivo 3
 
 • Gráfico ternario (Q–R–E)
@@ -101,6 +124,7 @@ Objetivo 3
 • Chi-cuadrado
 
 
+
 Objetivo 4
 
 • Structure plots (STR, InDel, AIMs, CX)
@@ -108,6 +132,7 @@ Objetivo 4
 • Ancestría promedio por haplogrupo
 
 • Interacción Y–mtDNA
+
 
 
 Objetivo 5
@@ -122,6 +147,7 @@ Objetivo 5
 
 • Trayectorias paralelas
 
+---
 
 🧬 Dependencias principales
 
@@ -148,6 +174,7 @@ Objetivo 5
 
 Todas se cargan automáticamente desde los scripts.
 
+---
 
 Para consultas sobre el análisis, metodología o implementación:
 
