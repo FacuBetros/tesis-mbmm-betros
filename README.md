@@ -29,46 +29,6 @@ Este repositorio contiene el análisis completo de mi tesis de grado sobre gené
 
 ---
 
-📁 Estructura del repositorio
-
-├── datos/
-
-│   └── Tesis.xlsx
-
-
-│
-├── scripts/
-
-│   ├── 00_funciones.R
-
-│   ├── 01_carga_datos.R
-
-│   ├── 02_objetivo1.R
-
-│   ├── 03_objetivo2.R
-
-│   ├── 04_objetivo3.R
-
-│   ├── 05_objetivo4.R
-
-│   ├── 06_objetivo5.R
-
-│   └── main.R
-
-
-│
-├── outputs/
-
-│   ├── figuras/
-
-│   └── tablas/
-
-│
-
-└── README.md
-
----
-
 🚀 Cómo ejecutar el análisis completo
 
 1. Clonar el repositorio: git clone https://github.com/<tu_usuario>/<tu_repo>.git
