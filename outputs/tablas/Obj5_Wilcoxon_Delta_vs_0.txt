@@ -1,0 +1,7 @@
+
+	Wilcoxon signed rank test with continuity correction
+
+data:  datos_mestizaje$delta_nativo
+V = 790, p-value = 2.376e-05
+alternative hypothesis: true location is not equal to 0
+

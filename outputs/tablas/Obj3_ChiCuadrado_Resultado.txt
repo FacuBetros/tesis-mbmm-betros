@@ -1,0 +1,7 @@
+
+	Pearson's Chi-squared test with Yates' continuity
+	correction
+
+data:  tabla_contingencia_yhrd
+X-squared = 3.6124, df = 1, p-value = 0.05735
+

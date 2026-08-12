@@ -1,0 +1,4 @@
+"Analisis","Estadistico","p_valor"
+"Kruskal-Wallis: ancestria autosomica ~ haplogrupo Y",188.498,4.56664034463871e-32
+"Spearman: origen paterno vs ancestria autosomica",0.473,8.77875012507078e-41
+"Spearman: origen paterno vs ancestria cromosoma X",0.31,0.0125348835984296

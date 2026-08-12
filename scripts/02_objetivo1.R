@@ -10,41 +10,6 @@ dir.create(here::here("outputs", "tablas"), recursive = TRUE, showWarnings = FAL
 dir.create(here::here("outputs", "figuras"), recursive = TRUE, showWarnings = FALSE)
 
 # ------------------------------------------------------------------------------
-# 1. PRE-PROCESAMIENTO DE MUESTRAS
-# ------------------------------------------------------------------------------
-
-# Limpieza de texto y creación de variables auxiliares
-muestras <- muestras %>%
-  mutate(
-    id          = clean_text(id),
-    hg_y        = clean_text(hg_y),
-    cat_y       = clean_text(cat_y),
-    mt_dna      = clean_text(mt_dna),
-    shg_nevgen  = clean_text(shg_nevgen),
-    shg_hprg    = clean_text(shg_hprg),
-    mt_dna_nat  = mtdna_native(mt_dna),
-    origen_y    = y_origin(cat_y),
-    grupo_y     = case_when(
-      cat_y == "Q" ~ "NATIVO",
-      cat_y %in% c("R", "I", "G") ~ "EUROPEO",
-      cat_y %in% c("J", "E1B1B", "T") ~ "MEDITERRANEO",
-      cat_y %in% c("A", "B", "E1A", "E1B1A") ~ "AFRICANO",
-      cat_y %in% c("L", "O", "H") ~ "ASIATICO",
-      TRUE ~ "OTROS"
-    )
-  )
-
-# Lista de loci Y-STR
-loci_y <- c(
-  "dys576","dys389i","dys448","dys389ii","dys19","dys391","dys481","dys549",
-  "dys533","dys438","dys437","dys570","dys635","dys390","dys439","dys392",
-  "dys643","dys393","dys458","dys385a","dys385b","dys456","gatah4"
-)
-
-# Unir haplotipo completo
-muestras <- muestras %>% unite(haplotipo, all_of(loci_y), sep = "-", remove = FALSE)
-
-# ------------------------------------------------------------------------------
 # 2. PARÁMETROS FORENSES POR KIT
 # ------------------------------------------------------------------------------
 
@@ -221,43 +186,6 @@ p_mapa <- ggplot() +
 ggsave(
   here::here("outputs", "figuras", "Obj1_Mapa_Filogeografico.png"),
   p_mapa, width = 28, height = 18, units = "cm", dpi = 300
-)
-
-# ------------------------------------------------------------------------------
-# 7. CONCORDANCIA ENTRE PREDICTORES
-# ------------------------------------------------------------------------------
-
-message("   - Calculando concordancia NevGen vs Whit Athey...")
-
-datos_concordancia_loci <- muestras %>%
-  mutate(
-    Tipo_Resolucion = case_when(
-      Kit_Origen == "PowerPlex Y12" ~ "Perfiles de 12 loci",
-      Kit_Origen == "Yfiler 17"     ~ "Perfiles de 17 loci",
-      Kit_Origen == "PowerPlex Y23" ~ "Perfiles de 23 loci",
-      TRUE                          ~ "Otros"
-    ),
-    Coincide = if_else(shg_nevgen == shg_hprg, "Concordante", "Discrepante")
-  ) %>%
-  filter(
-    !is.na(shg_nevgen), !is.na(shg_hprg),
-    shg_nevgen != "ND", shg_hprg != "ND",
-    shg_nevgen != "NA", shg_hprg != "NA"
-  )
-
-tabla_concordancia_resolucion <- datos_concordancia_loci %>%
-  count(Tipo_Resolucion, Coincide) %>%
-  group_by(Tipo_Resolucion) %>%
-  mutate(
-    Total_Grupo = sum(n),
-    Porcentaje = round(100 * n / Total_Grupo, 2)
-  ) %>%
-  ungroup()
-
-write.csv(
-  tabla_concordancia_resolucion,
-  here::here("outputs", "tablas", "Obj1_Concordancia_Predictores.csv"),
-  row.names = FALSE
 )
 
 message(">> Objetivo 1 completado.")

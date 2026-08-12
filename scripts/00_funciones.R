@@ -28,7 +28,9 @@ pacman::p_load(
   ggtree,
   dendextend,
   factoextra,
-  ggplot2
+  ggplot2,
+  ggforce,
+  tidyr
 )
 
 # --- Limpieza de texto ---------------------------------------------------------
@@ -106,3 +108,11 @@ paleta_mt <- c(
   "C1"="#a65628",
   "D1"="#984ea3"
 )
+
+paleta_sistemas <- c(
+  "STRs Autosómicos"   = "#377eb8",
+  "InDels Autosómicos" = "#4daf4a",
+  "AIMs"               = "#e41a1c",
+  "Cromosoma X"        = "#f0ad4e"
+)
+

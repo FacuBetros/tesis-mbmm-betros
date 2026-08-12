@@ -43,7 +43,45 @@ write.csv(
 )
 
 # ------------------------------------------------------------------------------
-# 2. DIVERSIDAD GENÉTICA (Nei, Haplotipos únicos, Fisher)
+# 2. CONCORDANCIA ENTRE PREDICTORES
+# ------------------------------------------------------------------------------
+
+message("   - Calculando concordancia NevGen vs Whit Athey...")
+
+datos_concordancia_loci <- muestras %>%
+  mutate(
+    Tipo_Resolucion = case_when(
+      Kit_Origen == "PowerPlex Y12" ~ "Perfiles de 12 loci",
+      Kit_Origen == "Yfiler 17"     ~ "Perfiles de 17 loci",
+      Kit_Origen == "PowerPlex Y23" ~ "Perfiles de 23 loci",
+      TRUE                          ~ "Otros"
+    ),
+    Coincide = if_else(shg_nevgen == shg_hprg, "Concordante", "Discrepante")
+  ) %>%
+  filter(
+    !is.na(shg_nevgen), !is.na(shg_hprg),
+    shg_nevgen != "ND", shg_hprg != "ND",
+    shg_nevgen != "NA", shg_hprg != "NA"
+  )
+
+tabla_concordancia_resolucion <- datos_concordancia_loci %>%
+  count(Tipo_Resolucion, Coincide) %>%
+  group_by(Tipo_Resolucion) %>%
+  mutate(
+    Total_Grupo = sum(n),
+    Porcentaje = round(100 * n / Total_Grupo, 2)
+  ) %>%
+  ungroup()
+
+write.csv(
+  tabla_concordancia_resolucion,
+  here::here("outputs", "tablas", "Obj2_Concordancia_Predictores.csv"),
+  row.names = FALSE
+)
+
+
+# ------------------------------------------------------------------------------
+# 3. DIVERSIDAD GENÉTICA (Nei, Haplotipos únicos, Fisher)
 # ------------------------------------------------------------------------------
 
 message("   - Calculando diversidad genética...")
@@ -111,7 +149,115 @@ capture.output(
 )
 
 # ------------------------------------------------------------------------------
-# 3. ÍNDICE KAPPA (NevGen vs Whit Athey)
+# 4. ANÁLISIS DE COORDENADAS PRINCIPALES (PCoA) DE PERFILES Y-STR
+# ------------------------------------------------------------------------------
+
+message("   - Calculando PCoA a partir de los perfiles Y-STR...")
+
+datos_pcoa <- muestras %>%
+  dplyr::select(all_of(loci_y), cat_y) %>%
+  mutate(
+    across(
+      all_of(loci_y),
+      ~ suppressWarnings(as.numeric(.))
+    )
+  ) %>%
+  tidyr::drop_na()
+
+if (nrow(datos_pcoa) >= 3) {
+  
+  matriz_ystr <- datos_pcoa %>%
+    dplyr::select(-cat_y) %>%
+    mutate(across(everything(), as.numeric))
+  
+  distancias <- dist(
+    as.matrix(matriz_ystr),
+    method = "euclidean"
+  )
+  
+  pcoa <- cmdscale(
+    distancias,
+    eig = TRUE,
+    k = 2
+  )
+  
+  df_pca <- data.frame(
+    PC1 = pcoa$points[, 1],
+    PC2 = pcoa$points[, 2],
+    Haplogrupo = datos_pcoa$cat_y
+  )
+  
+  write.csv(
+    df_pca,
+    here::here(
+      "outputs",
+      "tablas",
+      "Obj2_PCoA_Coordenadas.csv"
+    ),
+    row.names = FALSE
+  )
+  
+  p_pca2 <- ggplot(
+    df_pca,
+    aes(
+      x = PC1,
+      y = PC2,
+      color = Haplogrupo
+    )
+  ) +
+    geom_point(
+      size = 3,
+      alpha = 0.8
+    ) +
+    stat_ellipse(
+      aes(fill = Haplogrupo),
+      geom = "polygon",
+      alpha = 0.15,
+      color = NA,
+      level = 0.95
+    ) +
+    scale_color_manual(values = paleta_hg) +
+    scale_fill_manual(values = paleta_hg) +
+    theme_bw(base_size = 12) +
+    labs(
+      title = "PCoA de perfiles Y-STR",
+      x = "Coordenada Principal 1",
+      y = "Coordenada Principal 2",
+      color = "Haplogrupo",
+      fill = "Haplogrupo"
+    ) +
+    theme(
+      legend.position = "right",
+      plot.title = element_text(
+        face = "bold",
+        hjust = 0.5
+      )
+    )
+  
+  ggsave(
+    here::here(
+      "outputs",
+      "figuras",
+      "Obj2_PCoA_YSTR_Elipses_Tesis.pdf"
+    ),
+    p_pca2,
+    width = 10,
+    height = 8,
+    dpi = 600
+  )
+  
+  message("   -> Gráfico PCoA guardado correctamente.")
+  
+} else {
+  
+  warning(
+    "No hay suficientes perfiles completos para calcular el PCoA."
+  )
+  
+}
+
+# ------------------------------------------------------------------------------
+# 4. ÍNDICE KAPPA (NevGen vs Whit Athey)
 # ------------------------------------------------------------------------------
 
 message("   - Calculando índice Kappa...")

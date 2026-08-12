@@ -1,0 +1,7 @@
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  delta_nativo by origen_y
+W = 34, p-value = 0.7078
+alternative hypothesis: true location shift is not equal to 0
+
