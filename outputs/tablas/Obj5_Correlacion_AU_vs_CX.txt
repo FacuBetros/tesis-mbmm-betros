@@ -2,7 +2,7 @@
 	Spearman's rank correlation rho
 
 data:  datos_mestizaje$pct_au_nat and datos_mestizaje$pct_cx_nat
-S = 6502, p-value = 0.0005812
+S = 6502, p-value = 0.0004902
 alternative hypothesis: true rho is not equal to 0
 sample estimates:
       rho 

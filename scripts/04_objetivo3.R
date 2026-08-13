@@ -33,7 +33,7 @@ p_ternario <- ggtern(data = comparativas, aes(x = e, y = q, z = r)) +
   )
 
 ggsave(
-  here::here("outputs", "figuras", "Obj3_Haplogrupos_Ternario.png"),
+  here::here("outputs", "figuras", "Obj3.2_Haplogrupos_Ternario.png"),
   p_ternario, width = 18, height = 16, units = "cm", dpi = 300
 )
 
@@ -94,7 +94,7 @@ p_ma <- ggplot(yhrd_plot, aes(x = frec_mun_adj, y = log2fc, color = origen_linaj
   theme(plot.title = element_text(face = "bold", hjust = 0.5))
 
 ggsave(
-  here::here("outputs", "figuras", "Obj3_MA_Plot.png"),
+  here::here("outputs", "figuras", "Obj3.1_MA_Plot.png"),
   p_ma, width = 28, height = 16, units = "cm", dpi = 300
 )
 

@@ -32,7 +32,7 @@ p_hg <- ggplot(frecuencias_subhg, aes(x = reorder(hg_y, n), y = n, fill = cat_y)
         axis.text = element_text(color = "black"))
 
 ggsave(
-  here::here("outputs", "figuras", "Obj2_Frecuencia_Subhaplogrupos.png"),
+  here::here("outputs", "figuras", "Obj2.1_Frecuencia_Subhaplogrupos.png"),
   plot = p_hg, width = 24, height = 14, units = "cm", dpi = 300
 )
 
@@ -238,7 +238,7 @@ if (nrow(datos_pcoa) >= 3) {
     here::here(
       "outputs",
       "figuras",
-      "Obj2_PCoA_YSTR_Elipses_Tesis.pdf"
+      "Obj2.2_PCoA_YSTR_Elipses_Tesis.pdf"
     ),
     p_pca2,
     width = 10,

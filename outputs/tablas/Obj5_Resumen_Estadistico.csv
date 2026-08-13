@@ -1,5 +1,5 @@
 "Analisis","Estadistico","p_valor"
-"Spearman AU_Nativo vs CX_Nativo",0.509,0.000581187438754688
+"Spearman AU_Nativo vs CX_Nativo",0.509,0.000490211113217394
 "Wilcoxon pareado AU_Nativo vs CX_Nativo",113,2.37630301381579e-05
 "Wilcoxon Delta (CX-AU) vs 0",790,2.37630301380687e-05
 "Wilcoxon Delta según origen paterno",34,0.707763552434332

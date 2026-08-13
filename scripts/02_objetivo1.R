@@ -101,16 +101,16 @@ paleta_haplotipos <- c(
 )
 
 p_haplotipos <- ggplot(haplotipos_plot, aes(x = grupo, y = porcentaje, fill = categoria)) +
-  geom_col(width = 0.5, color = "black") +
+  geom_col(width = 0.5) +
   geom_text(aes(label = n), position = position_stack(vjust = 0.5),
-            color = "white", fontface = "bold", size = 3.5) +
+            color = "white", fontface = "bold", size = 3) +
   scale_fill_manual(values = paleta_haplotipos) +
   scale_y_continuous(labels = scales::percent_format()) +
   labs(title = "Distribución de Haplotipos", x = NULL, y = "Porcentaje") +
-  theme_bw(base_size = 14)
+  theme_bw(base_size = 12)
 
 ggsave(
-  here::here("outputs", "figuras", "Obj1_Haplotipos_Unicos_Repetidos.png"),
+  here::here("outputs", "figuras", "Obj1.1_Haplotipos_Unicos_Repetidos.png"),
   p_haplotipos, width = 16, height = 12, units = "cm", dpi = 300
 )
 
@@ -148,15 +148,18 @@ microvariantes_plot <- microvariantes %>%
   )
 
 p_bubble <- ggplot(microvariantes_plot, aes(x = country, y = microvariant)) +
-  geom_point(aes(color = continent), size = 4, alpha = 0.9) +
-  geom_text(aes(label = cases), color = "white", size = 2.5, fontface = "bold") +
+  geom_point(aes(color = continent), size = 5, alpha = 0.9) +
+  geom_text(aes(label = cases), color = "white", size = 2, fontface = "bold") +
   scale_color_manual(values = paleta_continentes) +
   labs(title = "Distribución Mundial de Microvariantes Y-STR",
        x = "País", y = "Microvariante") +
-  theme_bw(base_size = 12)
+  theme_bw(base_size = 12)+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) # <--- Aquí está la magia
+  )
 
 ggsave(
-  here::here("outputs", "figuras", "Obj1_BubbleChart.png"),
+  here::here("outputs", "figuras", "Obj1.2_BubbleChart.png"),
   p_bubble, width = 30, height = 12, units = "cm", dpi = 300
 )
 
@@ -184,7 +187,7 @@ p_mapa <- ggplot() +
   theme_void()
 
 ggsave(
-  here::here("outputs", "figuras", "Obj1_Mapa_Filogeografico.png"),
+  here::here("outputs", "figuras", "Obj1.3_Mapa_Filogeografico.png"),
   p_mapa, width = 28, height = 18, units = "cm", dpi = 300
 )
 
