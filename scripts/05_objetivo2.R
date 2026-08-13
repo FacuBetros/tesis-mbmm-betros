@@ -32,7 +32,7 @@ p_hg <- ggplot(frecuencias_subhg, aes(x = reorder(hg_y, n), y = n, fill = cat_y)
         axis.text = element_text(color = "black"))
 
 ggsave(
-  here::here("outputs", "figuras", "Obj2_Frecuencia_Subhaplogrupos.png"),
+  here::here("outputs", "figuras", "Obj2.1_Frecuencia_Subhaplogrupos.png"),
   plot = p_hg, width = 24, height = 14, units = "cm", dpi = 300
 )
 
@@ -149,115 +149,219 @@ capture.output(
 )
 
 # ------------------------------------------------------------------------------
-# 4. ANÁLISIS DE COORDENADAS PRINCIPALES (PCoA) DE PERFILES Y-STR
+# HEATMAP 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# 4. DISTANCIAS GENÉTICAS ENTRE HAPLOGRUPOS (FST Y SLATKIN)
 # ------------------------------------------------------------------------------
 
-message("   - Calculando PCoA a partir de los perfiles Y-STR...")
+message("   - Calculando FST pareado y distancia de Slatkin...")
 
-datos_pcoa <- muestras %>%
-  dplyr::select(all_of(loci_y), cat_y) %>%
+# Mantener solamente haplogrupos con tamaño muestral suficiente
+haplos_validos <- muestras %>%
+  count(cat_y) %>%
+  filter(
+    n >= 5,
+    cat_y !="NO", 
+    cat_y !="ND"
+    ) %>%
+  pull(cat_y)
+
+# Construcción de la matriz para FST
+datos_fst <- muestras %>%
+  filter(cat_y %in% haplos_validos) %>%
+  select(cat_y, all_of(marcadores_minimos)) %>%
   mutate(
     across(
-      all_of(loci_y),
+      all_of(marcadores_minimos),
       ~ suppressWarnings(as.numeric(.))
     )
   ) %>%
-  tidyr::drop_na()
+  mutate(
+    across(
+      all_of(marcadores_minimos),
+      ~ tidyr::replace_na(., 0)
+    )
+  ) %>%
+  as.data.frame()
 
-if (nrow(datos_pcoa) >= 3) {
+message(
+  "Muestras utilizadas para FST: ",
+  nrow(datos_fst)
+)
+
+# Conversión para haploides
+datos_haploides <- datos_fst
+
+for(i in 2:ncol(datos_haploides)){
   
-  matriz_ystr <- datos_pcoa %>%
-    dplyr::select(-cat_y) %>%
-    mutate(across(everything(), as.numeric))
-  
-  distancias <- dist(
-    as.matrix(matriz_ystr),
-    method = "euclidean"
-  )
-  
-  pcoa <- cmdscale(
-    distancias,
-    eig = TRUE,
-    k = 2
-  )
-  
-  df_pca <- data.frame(
-    PC1 = pcoa$points[, 1],
-    PC2 = pcoa$points[, 2],
-    Haplogrupo = datos_pcoa$cat_y
-  )
-  
-  write.csv(
-    df_pca,
-    here::here(
-      "outputs",
-      "tablas",
-      "Obj2_PCoA_Coordenadas.csv"
-    ),
-    row.names = FALSE
-  )
-  
-  p_pca2 <- ggplot(
-    df_pca,
-    aes(
-      x = PC1,
-      y = PC2,
-      color = Haplogrupo
+  datos_haploides[[i]] <- as.numeric(
+    paste0(
+      datos_haploides[[i]],
+      datos_haploides[[i]]
     )
-  ) +
-    geom_point(
-      size = 3,
-      alpha = 0.8
-    ) +
-    stat_ellipse(
-      aes(fill = Haplogrupo),
-      geom = "polygon",
-      alpha = 0.15,
-      color = NA,
-      level = 0.95
-    ) +
-    scale_color_manual(values = paleta_hg) +
-    scale_fill_manual(values = paleta_hg) +
-    theme_bw(base_size = 12) +
-    labs(
-      title = "PCoA de perfiles Y-STR",
-      x = "Coordenada Principal 1",
-      y = "Coordenada Principal 2",
-      color = "Haplogrupo",
-      fill = "Haplogrupo"
-    ) +
-    theme(
-      legend.position = "right",
-      plot.title = element_text(
-        face = "bold",
-        hjust = 0.5
-      )
-    )
-  
-  ggsave(
-    here::here(
-      "outputs",
-      "figuras",
-      "Obj2_PCoA_YSTR_Elipses_Tesis.pdf"
-    ),
-    p_pca2,
-    width = 10,
-    height = 8,
-    dpi = 600
-  )
-  
-  message("   -> Gráfico PCoA guardado correctamente.")
-  
-} else {
-  
-  warning(
-    "No hay suficientes perfiles completos para calcular el PCoA."
   )
   
 }
 
+# Cálculo del FST
+matriz_fst <- hierfstat::genet.dist(
+  datos_haploides,
+  method = "WC84"
+)
+
+matriz_fst_cuadrada <- as.matrix(matriz_fst)
+
+matriz_fst_cuadrada[
+  matriz_fst_cuadrada < 0
+] <- 0
+
+# Distancia linealizada de Slatkin
+matriz_slatkin <-
+  matriz_fst_cuadrada /
+  (1 - matriz_fst_cuadrada)
+
+# Exportar matrices
+write.csv(
+  matriz_fst_cuadrada,
+  here::here(
+    "outputs",
+    "tablas",
+    "Obj2_FST_Pareado.csv"
+  )
+)
+
+write.csv(
+  matriz_slatkin,
+  here::here(
+    "outputs",
+    "tablas",
+    "Obj2_FST_Slatkin.csv"
+  )
+)
+
 # ------------------------------------------------------------------------------
-# 4. ÍNDICE KAPPA (NevGen vs Whit Athey)
+# HEATMAP TRIPARTITO
+# ------------------------------------------------------------------------------
+hd_haplogrupos <- diversidad_hg$HD
+names(hd_haplogrupos) <- diversidad_hg$cat_y
+
+matriz_fusion <- matriz_fst_cuadrada
+
+matriz_fusion[
+  lower.tri(matriz_fusion)
+] <- matriz_slatkin[
+  lower.tri(matriz_slatkin)
+]
+
+for(hg in intersect(
+  rownames(matriz_fusion),
+  names(hd_haplogrupos)
+)){
+  
+  matriz_fusion[hg, hg] <- hd_haplogrupos[hg]
+  
+}
+df_heatmap <- as.data.frame(
+  as.table(matriz_fusion)
+)
+
+colnames(df_heatmap) <- c(
+  "Haplogrupo_Y",
+  "Haplogrupo_X",
+  "Valor"
+)
+
+orden_haplos <- sort(
+  unique(
+    as.character(df_heatmap$Haplogrupo_X)
+  )
+)
+
+df_heatmap$Haplogrupo_Y <- factor(
+  df_heatmap$Haplogrupo_Y,
+  levels = rev(orden_haplos)
+)
+
+df_heatmap$Haplogrupo_X <- factor(
+  df_heatmap$Haplogrupo_X,
+  levels = orden_haplos
+)
+
+p_tripartito <- ggplot(
+  df_heatmap,
+  aes(
+    x = Haplogrupo_X,
+    y = Haplogrupo_Y,
+    fill = Valor
+  )
+) +
+  geom_tile(
+    color = "white",
+    linewidth = 0.5
+  ) +
+  geom_text(
+    aes(
+      label = ifelse(
+        is.na(Valor),
+        "-",
+        sprintf("%.3f", Valor)
+      )
+    ),
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  scale_fill_gradientn(
+    colors = c(
+      "#4575b4",
+      "white",
+      "#d73027"
+    ),
+    na.value = "grey90",
+    name = "Distancia"
+  ) +
+  labs(
+    title = "Distancias Genéticas entre Haplogrupos Y",
+    subtitle = "Diagonal: Diversidad intrahaplogrupo (HD de Nei) | Superior: FST | Inferior: FST linealizado de Slatkin",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      face = "bold"
+    ),
+    axis.text.y = element_text(
+      face = "bold"
+    ),
+    plot.title = element_text(
+      face = "bold",
+      hjust = 0.5
+    ),
+    plot.subtitle = element_text(
+      hjust = 0.5
+    )
+  )
+
+ggsave(
+  here::here(
+    "outputs",
+    "figuras",
+    "Obj2.2_Heatmap_FST_Slatkin.png"
+  ),
+  plot = p_tripartito,
+  width = 10,
+  height = 8,
+  dpi = 300
+)
+
+message("   -> Heatmap FST/Slatkin guardado correctamente.")
+
+# ------------------------------------------------------------------------------
+# 5. ÍNDICE KAPPA (NevGen vs Whit Athey)
 # ------------------------------------------------------------------------------
 
 message("   - Calculando índice Kappa...")
@@ -276,5 +380,12 @@ capture.output(
   resultado_kappa,
   file = here::here("outputs", "tablas", "Obj2_Kappa_NevGen_vs_HPRG.txt")
 )
+
+# ------------------------------------------------------------------------------
+# 6. ANÁLISIS DE COORDENADAS PRINCIPALES (PCoA)
+# ------------------------------------------------------------------------------
+
+# El análisis PCoA fue realizado en GenAlEx utilizando el haplotipo mínimo
+# y se presenta en la sección de resultados correspondiente.
 
 message(">> Objetivo 2 completado.")

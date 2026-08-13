@@ -10,7 +10,7 @@ dir.create(here::here("outputs", "tablas"), recursive = TRUE, showWarnings = FAL
 dir.create(here::here("outputs", "figuras"), recursive = TRUE, showWarnings = FALSE)
 
 # ------------------------------------------------------------------------------
-# 2. PARÁMETROS FORENSES POR KIT
+# 1. PARÁMETROS FORENSES POR KIT
 # ------------------------------------------------------------------------------
 
 message("   - Calculando parámetros forenses...")
@@ -23,20 +23,45 @@ marcadores_y17 <- c(marcadores_y12, "dys448","dys635","dys458","dys456","gatah4"
 
 marcadores_y23 <- c(marcadores_y17, "dys576","dys481","dys549","dys533","dys570","dys643")
 
-# Clasificación por cantidad de loci válidos
+extra_y17 <- c(
+  "dys448","dys635","dys458",
+  "dys456","gatah4"
+)
+
+extra_y23 <- c(
+  "dys576","dys481","dys549",
+  "dys533","dys570","dys643"
+)
+
+# Clasificación de muestras según los marcadores observados
 muestras <- muestras %>%
   rowwise() %>%
-  mutate(n_validos = sum(!(is.na(c_across(all_of(loci_y))) |
-                             c_across(all_of(loci_y)) %in% c("NA","")))) %>%
-  ungroup() %>%
   mutate(
+    
+    tiene_y17 = any(
+      !is.na(c_across(all_of(extra_y17))) &
+        !(c_across(all_of(extra_y17)) %in% c("", "NA", "0", 0))
+    ),
+    
+    tiene_y23 = any(
+      !is.na(c_across(all_of(extra_y23))) &
+        !(c_across(all_of(extra_y23)) %in% c("", "NA", "0", 0))
+    ),
+    
+    sin_datos = all(
+      is.na(c_across(all_of(loci_y))) |
+        c_across(all_of(loci_y)) %in% c("", "NA")
+    ),
+    
     Kit_Origen = case_when(
-      n_validos == 0 ~ "Sin Datos",
-      n_validos <= 12 ~ "PowerPlex Y12",
-      n_validos <= 17 ~ "Yfiler 17",
-      n_validos > 17 ~ "PowerPlex Y23"
+      sin_datos ~ "Sin Datos",
+      tiene_y23 ~ "PowerPlex Y23",
+      tiene_y17 ~ "Yfiler 17",
+      TRUE ~ "PowerPlex Y12"
     )
-  )
+    
+  ) %>%
+  ungroup()
 
 # Función para calcular parámetros forenses
 calcular_forenses <- function(df, marcadores, nombre_kit) {
@@ -57,7 +82,12 @@ calcular_forenses <- function(df, marcadores, nombre_kit) {
       DC = Ht_Distintos / N_Analizado,
       MP = sum(Frec_Cuadrado),
       PD = 1 - MP,
-      HD = (N_Analizado / (N_Analizado - 1)) * (1 - sum(Frec_Cuadrado))
+      HD = ifelse(
+        N_Analizado > 1,
+        (N_Analizado / (N_Analizado - 1)) *
+          (1 - sum(Frec_Cuadrado)),
+        NA_real_
+      )
     )
 }
 
@@ -93,24 +123,17 @@ haplotipos_plot <- muestras %>%
   mutate(porcentaje = n / sum(n)) %>%
   ungroup()
 
-paleta_haplotipos <- c(
-  "Únicos" = "#1f6285",
-  "2 Repeticiones" = "#e8752f",
-  "3 Repeticiones" = "#1f7a2e",
-  "4+ Repeticiones" = "#2ea8df"
-)
-
 p_haplotipos <- ggplot(haplotipos_plot, aes(x = grupo, y = porcentaje, fill = categoria)) +
-  geom_col(width = 0.5, color = "black") +
+  geom_col(width = 0.5) +
   geom_text(aes(label = n), position = position_stack(vjust = 0.5),
-            color = "white", fontface = "bold", size = 3.5) +
+            color = "white", fontface = "bold", size = 3) +
   scale_fill_manual(values = paleta_haplotipos) +
   scale_y_continuous(labels = scales::percent_format()) +
   labs(title = "Distribución de Haplotipos", x = NULL, y = "Porcentaje") +
-  theme_bw(base_size = 14)
+  theme_bw(base_size = 12)
 
 ggsave(
-  here::here("outputs", "figuras", "Obj1_Haplotipos_Unicos_Repetidos.png"),
+  here::here("outputs", "figuras", "Obj1.1_Haplotipos_Unicos_Repetidos.png"),
   p_haplotipos, width = 16, height = 12, units = "cm", dpi = 300
 )
 
@@ -148,15 +171,18 @@ microvariantes_plot <- microvariantes %>%
   )
 
 p_bubble <- ggplot(microvariantes_plot, aes(x = country, y = microvariant)) +
-  geom_point(aes(color = continent), size = 4, alpha = 0.9) +
-  geom_text(aes(label = cases), color = "white", size = 2.5, fontface = "bold") +
+  geom_point(aes(color = continent), size = 5, alpha = 0.9) +
+  geom_text(aes(label = cases), color = "white", size = 2, fontface = "bold") +
   scale_color_manual(values = paleta_continentes) +
   labs(title = "Distribución Mundial de Microvariantes Y-STR",
        x = "País", y = "Microvariante") +
-  theme_bw(base_size = 12)
+  theme_bw(base_size = 12)+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) # <--- Aquí está la magia
+  )
 
 ggsave(
-  here::here("outputs", "figuras", "Obj1_BubbleChart.png"),
+  here::here("outputs", "figuras", "Obj1.2_BubbleChart.png"),
   p_bubble, width = 30, height = 12, units = "cm", dpi = 300
 )
 
@@ -184,7 +210,7 @@ p_mapa <- ggplot() +
   theme_void()
 
 ggsave(
-  here::here("outputs", "figuras", "Obj1_Mapa_Filogeografico.png"),
+  here::here("outputs", "figuras", "Obj1.3_Mapa_Filogeografico.png"),
   p_mapa, width = 28, height = 18, units = "cm", dpi = 300
 )
 

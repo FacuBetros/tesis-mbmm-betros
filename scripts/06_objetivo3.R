@@ -33,7 +33,7 @@ p_ternario <- ggtern(data = comparativas, aes(x = e, y = q, z = r)) +
   )
 
 ggsave(
-  here::here("outputs", "figuras", "Obj3_Haplogrupos_Ternario.png"),
+  here::here("outputs", "figuras", "Obj3.2_Haplogrupos_Ternario.png"),
   p_ternario, width = 18, height = 16, units = "cm", dpi = 300
 )
 
@@ -60,7 +60,15 @@ yhrd_plot <- yhrd %>%
   )
 
 # Ajuste de ceros para log2
-min_m <- min(yhrd_plot$frec_mun[yhrd_plot$frec_mun > 0], na.rm = TRUE) / 2
+freq_m_nonzero <- yhrd_plot$frec_mun[
+  yhrd_plot$frec_mun > 0
+]
+
+if(length(freq_m_nonzero) == 0){
+  stop("No existen frecuencias mundiales > 0")
+}
+
+min_m <- min(freq_m_nonzero) / 2
 min_a <- min(yhrd_plot$frec_arg[yhrd_plot$frec_arg > 0], na.rm = TRUE) / 2
 
 yhrd_plot <- yhrd_plot %>%
@@ -94,7 +102,7 @@ p_ma <- ggplot(yhrd_plot, aes(x = frec_mun_adj, y = log2fc, color = origen_linaj
   theme(plot.title = element_text(face = "bold", hjust = 0.5))
 
 ggsave(
-  here::here("outputs", "figuras", "Obj3_MA_Plot.png"),
+  here::here("outputs", "figuras", "Obj3.1_MA_Plot.png"),
   p_ma, width = 28, height = 16, units = "cm", dpi = 300
 )
 
@@ -129,7 +137,9 @@ write.csv(
 resultado_chi_yhrd <- chisq.test(tabla_contingencia_yhrd)
 
 capture.output(
-  resultado_chi_yhrd,
+  suppressWarnings(
+    chisq.test(tabla_contingencia_yhrd)
+  ),
   file = here::here("outputs", "tablas", "Obj3_ChiCuadrado_Resultado.txt")
 )
 

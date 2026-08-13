@@ -1,68 +1,29 @@
 # ==============================================================================
-# 00 - FUNCIONES AUXILIARES
-# Autor: Facundo Betros
+# 00 - CONSTANTES
 # ==============================================================================
 
-# --- Librerías ----------------------------------------------------------------
-if (!requireNamespace("pacman", quietly = TRUE)) {
-  install.packages("pacman")
-}
-
-pacman::p_load(
-  tidyverse,
-  readxl,
-  janitor,
-  stringi,
-  maps,
-  mapdata,
-  countrycode,
-  ggtern,
-  grid,
-  gridExtra,
-  irr,
-  dplyr,
-  stringr,
-  tibble,
-  FSA,
-  ape,
-  ggtree,
-  dendextend,
-  factoextra,
-  ggplot2,
-  ggforce,
-  tidyr
+# Lista de loci Y-STR
+loci_y <- c(
+  "dys576","dys389i","dys448","dys389ii","dys19","dys391","dys481","dys549",
+  "dys533","dys438","dys437","dys570","dys635","dys390","dys439","dys392",
+  "dys643","dys393","dys458","dys385a","dys385b","dys456","gatah4"
 )
 
-# --- Limpieza de texto ---------------------------------------------------------
-clean_text <- function(x) {
-  x %>%
-    as.character() %>%
-    stringi::stri_trans_general("Latin-ASCII") %>%
-    stringr::str_squish() %>%
-    toupper()
-}
+marcadores_minimos <- c(
+  "dys19",
+  "dys389i",
+  "dys389ii",
+  "dys390",
+  "dys391",
+  "dys392",
+  "dys393",
+  "dys385a",
+  "dys385b"
+)
 
-# --- Limpieza de números -------------------------------------------------------
-clean_numeric <- function(x) {
-  suppressWarnings(
-    x %>%
-      as.character() %>%
-      gsub("%", "", .) %>%
-      gsub(",", ".", .) %>%
-      trimws() %>%
-      as.numeric()
-  )
-}
+MTDNA_NATIVE <- c("A2", "B2", "C1", "D1")
 
-# --- Clasificación mtDNA -------------------------------------------------------
-mtdna_native <- function(x) {
-  if_else(x %in% c("A2", "B2", "C1", "D1"), "SI", "NO")
-}
-
-# --- Clasificación Y -----------------------------------------------------------
-y_origin <- function(x) {
-  if_else(x == "Q", "NATIVO", "NO_NATIVO")
-}
+Y_NATIVE <- c("Q")
 
 # --- Paletas de colores --------------------------------------------------------
 paleta_ancestria <- c(
@@ -90,7 +51,7 @@ paleta_haplotipos <- c(
   "Únicos" = "#1f6285",
   "2 Repeticiones" = "#e8752f",
   "3 Repeticiones" = "#1f7a2e",
-  "4 Repeticiones" = "#2ea8df"
+  "4+ Repeticiones" = "#2ea8df"
 )
 
 paleta_grupos <- c(
@@ -116,3 +77,16 @@ paleta_sistemas <- c(
   "Cromosoma X"        = "#f0ad4e"
 )
 
+paleta_completa <- c(
+  "Nativo"     = "#e41a1c",
+  "Europeo"    = "#377eb8",
+  "Africano"   = "#f0ad4e",
+  "Haplogrupo" = "white"
+)
+
+paleta_texto <- c(
+  "Nativo"     = "white",
+  "Europeo"    = "white",
+  "Africano"   = "black",
+  "Haplogrupo" = "black"
+)

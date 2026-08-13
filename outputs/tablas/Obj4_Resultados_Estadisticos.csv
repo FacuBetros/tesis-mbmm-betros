@@ -1,4 +1,9 @@
-"Analisis","Estadistico","p_valor"
-"Kruskal-Wallis: ancestria autosomica ~ haplogrupo Y",188.498,4.56664034463871e-32
-"Spearman: origen paterno vs ancestria autosomica",0.473,8.77875012507078e-41
-"Spearman: origen paterno vs ancestria cromosoma X",0.31,0.0125348835984296
+"Analisis","Sistema","Estadistico_Nombre","Estadistico_Valor","p_valor"
+"Kruskal-Wallis (Ancestría Nativa ~ Haplogrupo Y)","STRs Autosómicos","Chi-cuadrado (χ²)",188.498,4.56664034463871e-32
+"Kruskal-Wallis (Ancestría Nativa ~ Haplogrupo Y)","InDels Autosómicos","Chi-cuadrado (χ²)",5.494,0.599906883599339
+"Kruskal-Wallis (Ancestría Nativa ~ Haplogrupo Y)","AIMs-SNPs Autosómicos","Chi-cuadrado (χ²)",9.678,0.138888538498891
+"Kruskal-Wallis (Ancestría Nativa ~ Haplogrupo Y)","Cromosoma X","Chi-cuadrado (χ²)",11.112,0.13379053988784
+"Spearman (Origen Paterno Q vs Ancestría Nativa)","STRs Autosómicos","Rho (rho)",0.473,8.77875012507078e-41
+"Spearman (Origen Paterno Q vs Ancestría Nativa)","InDels Autosómicos","Rho (rho)",0.258,0.0426468685105539
+"Spearman (Origen Paterno Q vs Ancestría Nativa)","AIMs-SNPs Autosómicos","Rho (rho)",0.43,0.00361026583670584
+"Spearman (Origen Paterno Q vs Ancestría Nativa)","Cromosoma X","Rho (rho)",0.31,0.0125348835984296
