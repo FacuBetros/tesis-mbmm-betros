@@ -253,6 +253,7 @@ if(nrow(df_box_multi) == 0) {
       position = position_dodge(width = 0.8)
     ) +
     scale_fill_manual(values = paleta_sistemas) +
+<<<<<<< HEAD:scripts/07_objetivo4.R
     scale_y_continuous(
       labels = scales::percent_format()
     ) +
@@ -273,6 +274,15 @@ if(nrow(df_box_multi) == 0) {
       ),
       legend.position = "right"
     )
+=======
+    scale_y_continuous(labels = scales::percent_format()) +
+    labs(title = "Distribución de Ancestría Nativa por Sistema y Linaje Paterno",
+         x = "Haplogrupo del Cromosoma Y", y = "Proporción de Ancestría Nativa Americana", fill = "Sistema de Marcadores") +
+    theme_bw(base_size = 12) +
+    theme(plot.title = element_text(face = "bold", hjust = 0.5),
+          axis.title = element_text(face = "bold"),
+          legend.position = "right")
+>>>>>>> 8f0b8e67cff1d400351dfb1cfdc1c6074f0900e3:scripts/05_objetivo4.R
   
   # Guardar
   ggsave(filename = here::here("outputs", "figuras", "Obj4_Boxplot_Multisistema.png"),
@@ -338,9 +348,20 @@ if ("mt_dna" %in% names(ancestria_sistemas_hg)) {
       )
     )
   
+<<<<<<< HEAD:scripts/07_objetivo4.R
   n_hg_mt <- length(
     unique(df_mt_plot$hg)
   )
+=======
+  p_mt_y <- ggplot(df_mt_plot, aes(x = hg, y = n, fill = mtDNA_clado)) +
+    geom_col(position = "fill", width = 0.7) +
+    geom_text(aes(label = n), position = position_fill(vjust = 0.5), color = "white", fontface = "bold", size = 3.5) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    scale_fill_manual(values = paleta_mt, name = "Clado mtDNA") +
+    labs(title = "Interacción de Linajes: Haplogrupo Y vs mtDNA Nativo", x = NULL, y = NULL) +
+    theme_bw(base_size = 12) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "bold")) # Texto en ángulo
+>>>>>>> 8f0b8e67cff1d400351dfb1cfdc1c6074f0900e3:scripts/05_objetivo4.R
   
   ancho_mt <- max(
     18,
@@ -377,8 +398,11 @@ message("   - Calculando pruebas estadísticas (Kruskal-Wallis, Spearman y Dunn)
 # ------------------------------------------------------------------------------
 # 5.1 Pruebas de Kruskal-Wallis por Sistema de Marcadores
 # ------------------------------------------------------------------------------
+<<<<<<< HEAD:scripts/07_objetivo4.R
 ancestria_stats <- ancestria_sistemas_hg %>%
   filter(!cat_y %in% c("NO", "ND"))
+=======
+>>>>>>> 8f0b8e67cff1d400351dfb1cfdc1c6074f0900e3:scripts/05_objetivo4.R
 
 # 1. STRs autosómicos (str_na)
 datos_kw_str <- ancestria_sistemas_hg %>%
@@ -419,6 +443,7 @@ print("--- Kruskal-Wallis: Cromosoma X ---"); print(kruskal_cx)
 # 5.2 Comparaciones Múltiples Post-Hoc (Dunn para STRs)
 # ------------------------------------------------------------------------------
 # Se realiza únicamente para STRs ya que fue el único sistema con p < 0.05 global
+<<<<<<< HEAD:scripts/07_objetivo4.R
 dunn_resultado <- FSA::dunnTest(
   str_na ~ cat_y,
   data = datos_kw_str,
@@ -436,6 +461,20 @@ write.csv(
 )
 
 message("     [+] Resultados de Post-Hoc Dunn exportados correctamente.")
+=======
+if (requireNamespace("FSA", quietly = TRUE)) {
+  dunn_resultado <- FSA::dunnTest(str_na ~ cat_y, data = datos_kw_str, method = "bh")
+  
+  # Crear carpeta si no existe y exportar
+  dir.create(here::here("outputs", "tablas"), recursive = TRUE, showWarnings = FALSE)
+  write.csv(dunn_resultado$res, 
+            here::here("outputs", "tablas", "Obj4_Dunn_PostHoc_HaplogruposY.csv"), 
+            row.names = FALSE)
+  message("     [+] Resultados de Post-Hoc Dunn exportados correctamente.")
+} else {
+  warning("El paquete 'FSA' no está instalado. No se pudo ejecutar el Post-Hoc de Dunn.")
+}
+>>>>>>> 8f0b8e67cff1d400351dfb1cfdc1c6074f0900e3:scripts/05_objetivo4.R
 
 
 # ------------------------------------------------------------------------------

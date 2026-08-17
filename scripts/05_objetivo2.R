@@ -200,6 +200,57 @@ for(i in 2:ncol(datos_haploides)){
       datos_haploides[[i]],
       datos_haploides[[i]]
     )
+<<<<<<< HEAD:scripts/05_objetivo2.R
+=======
+  ) +
+    geom_point(
+      size = 3,
+      alpha = 0.8
+    ) +
+    stat_ellipse(
+      aes(fill = Haplogrupo),
+      geom = "polygon",
+      alpha = 0.15,
+      color = NA,
+      level = 0.95
+    ) +
+    scale_color_manual(values = paleta_hg) +
+    scale_fill_manual(values = paleta_hg) +
+    theme_bw(base_size = 12) +
+    labs(
+      title = "PCoA de perfiles Y-STR",
+      x = "Coordenada Principal 1",
+      y = "Coordenada Principal 2",
+      color = "Haplogrupo",
+      fill = "Haplogrupo"
+    ) +
+    theme(
+      legend.position = "right",
+      plot.title = element_text(
+        face = "bold",
+        hjust = 0.5
+      )
+    )
+  
+  ggsave(
+    here::here(
+      "outputs",
+      "figuras",
+      "Obj2.2_PCoA_YSTR_Elipses_Tesis.pdf"
+    ),
+    p_pca2,
+    width = 10,
+    height = 8,
+    dpi = 600
+  )
+  
+  message("   -> Gráfico PCoA guardado correctamente.")
+  
+} else {
+  
+  warning(
+    "No hay suficientes perfiles completos para calcular el PCoA."
+>>>>>>> 8f0b8e67cff1d400351dfb1cfdc1c6074f0900e3:scripts/03_objetivo2.R
   )
   
 }
